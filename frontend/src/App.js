@@ -177,6 +177,11 @@ const Header = () => {
               <Link to="/dashboard" className="text-gray-600 hover:text-emerald-600 font-medium">
                 Dashboard
               </Link>
+              {user?.role === 'admin' && (
+                <Link to="/admin" className="text-gray-600 hover:text-emerald-600 font-medium">
+                  Admin
+                </Link>
+              )}
             </nav>
           </div>
 
