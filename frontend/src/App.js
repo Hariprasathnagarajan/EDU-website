@@ -14,6 +14,7 @@ import { Textarea } from './components/ui/textarea';
 import { Progress } from './components/ui/progress';
 import { Separator } from './components/ui/separator';
 import { toast, Toaster } from 'sonner';
+import VideoPlayer from './components/VideoPlayer';
 import { 
   BookOpen, 
   Users, 
@@ -30,7 +31,12 @@ import {
   PlusCircle,
   Video,
   Award,
-  TrendingUp
+  TrendingUp,
+  Settings,
+  BarChart3,
+  UserPlus,
+  FileText,
+  Shield
 } from 'lucide-react';
 import './App.css';
 
