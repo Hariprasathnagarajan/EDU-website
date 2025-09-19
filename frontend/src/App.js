@@ -476,12 +476,12 @@ const CoursesPage = () => {
                 <SelectItem value="data-science">Data Science</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={filters.level} onValueChange={(value) => setFilters(prev => ({ ...prev, level: value }))}>
+            <Select value={filters.level || ""} onValueChange={(value) => setFilters(prev => ({ ...prev, level: value === "all" ? "" : value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Level" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Levels</SelectItem>
+                <SelectItem value="all">All Levels</SelectItem>
                 <SelectItem value="beginner">Beginner</SelectItem>
                 <SelectItem value="intermediate">Intermediate</SelectItem>
                 <SelectItem value="advanced">Advanced</SelectItem>
