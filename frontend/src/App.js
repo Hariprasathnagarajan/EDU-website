@@ -428,6 +428,7 @@ const LandingPage = () => {
 const CoursesPage = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
   const [filters, setFilters] = useState({
     search: '',
     category: '',
