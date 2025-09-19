@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from './components/ui/textarea';
 import { Progress } from './components/ui/progress';
 import { Separator } from './components/ui/separator';
-import { toast } from 'sonner';
+import { toast, Toaster } from 'sonner';
 import { 
   BookOpen, 
   Users, 
