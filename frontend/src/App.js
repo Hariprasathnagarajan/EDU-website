@@ -535,8 +535,8 @@ const CoursesPage = () => {
                     <Clock className="w-4 h-4 mr-1" />
                     {course.duration_hours}h
                   </div>
-                  <Button size="sm">
-                    Enroll Now
+                  <Button size="sm" onClick={() => navigate(`/courses/${course.id}`)}>
+                    View Course
                   </Button>
                 </div>
               </CardContent>
