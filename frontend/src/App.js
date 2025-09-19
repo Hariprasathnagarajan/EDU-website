@@ -830,6 +830,7 @@ export default function AppWithProviders() {
   return (
     <AuthProvider>
       <App />
+      <Toaster position="top-right" richColors />
     </AuthProvider>
   );
 }
