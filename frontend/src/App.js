@@ -653,7 +653,372 @@ const MentorsPage = () => {
   );
 };
 
-// Dashboard Component
+// Course Detail Page
+const CourseDetailPage = () => {
+  const { courseId } = useParams();
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [enrolled, setEnrolled] = useState(false);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    fetchCourse();
+  }, [courseId]);
+
+  const fetchCourse = async () => {
+    try {
+      const response = await axios.get(`${API}/courses/${courseId}`);
+      setCourse(response.data);
+    } catch (error) {
+      toast.error('Failed to fetch course details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEnroll = async () => {
+    try {
+      // Update progress to show enrollment
+      await axios.post(`${API}/progress/${courseId}`, { completion_percentage: 0 });
+      setEnrolled(true);
+      toast.success('Successfully enrolled in course!');
+    } catch (error) {
+      toast.error('Failed to enroll in course');
+    }
+  };
+
+  const handleProgress = (percentage) => {
+    // Update progress in backend
+    if (enrolled) {
+      axios.post(`${API}/progress/${courseId}`, { completion_percentage: percentage })
+        .catch(error => console.error('Failed to update progress:', error));
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-12">Loading course...</div>;
+  }
+
+  if (!course) {
+    return <div className="text-center py-12">Course not found</div>;
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-2">
+          {/* Video Player */}
+          {course.video_url && (
+            <div className="mb-8">
+              <VideoPlayer 
+                src={course.video_url}
+                title={course.title}
+                onProgress={handleProgress}
+                className="w-full"
+              />
+            </div>
+          )}
+
+          {/* Course Info */}
+          <div className="space-y-6">
+            <div>
+              <div className="flex items-center space-x-2 mb-2">
+                <Badge variant="secondary" className="capitalize">
+                  {course.level}
+                </Badge>
+                <Badge variant="outline">
+                  {course.category}
+                </Badge>
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{course.title}</h1>
+              <p className="text-gray-600 text-lg">{course.description}</p>
+            </div>
+
+            <div className="flex items-center space-x-6 text-sm text-gray-500">
+              <div className="flex items-center">
+                <Clock className="w-4 h-4 mr-1" />
+                {course.duration_hours} hours
+              </div>
+              <div className="flex items-center">
+                <Video className="w-4 h-4 mr-1" />
+                Video Lessons
+              </div>
+              <div className="flex items-center">
+                <Award className="w-4 h-4 mr-1" />
+                Certificate
+              </div>
+            </div>
+
+            {/* Tags */}
+            {course.tags && course.tags.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold mb-2">What you'll learn</h3>
+                <div className="flex flex-wrap gap-2">
+                  {course.tags.map((tag, index) => (
+                    <Badge key={index} variant="outline" className="capitalize">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div>
+          <Card className="sticky top-8">
+            <CardContent className="p-6">
+              <div className="text-center mb-6">
+                <div className="text-3xl font-bold text-emerald-600 mb-2">
+                  ${course.price}
+                </div>
+                <p className="text-gray-500">One-time payment</p>
+              </div>
+
+              {enrolled ? (
+                <div className="space-y-4">
+                  <Button className="w-full" disabled>
+                    Already Enrolled ✓
+                  </Button>
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600">Continue learning from your dashboard</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <Button onClick={handleEnroll} className="w-full" size="lg">
+                    Enroll Now
+                  </Button>
+                  <div className="text-center">
+                    <p className="text-xs text-gray-500">30-day money-back guarantee</p>
+                  </div>
+                </div>
+              )}
+
+              <Separator className="my-6" />
+
+              <div className="space-y-4">
+                <h4 className="font-semibold">This course includes:</h4>
+                <ul className="space-y-2 text-sm text-gray-600">
+                  <li className="flex items-center">
+                    <Video className="w-4 h-4 mr-2 text-emerald-600" />
+                    {course.duration_hours} hours on-demand video
+                  </li>
+                  <li className="flex items-center">
+                    <FileText className="w-4 h-4 mr-2 text-emerald-600" />
+                    Downloadable resources
+                  </li>
+                  <li className="flex items-center">
+                    <Award className="w-4 h-4 mr-2 text-emerald-600" />
+                    Certificate of completion
+                  </li>
+                  <li className="flex items-center">
+                    <MessageCircle className="w-4 h-4 mr-2 text-emerald-600" />
+                    Direct instructor access
+                  </li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Admin Panel
+const AdminPanel = () => {
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalCourses: 0,
+    totalSessions: 0,
+    recentActivity: []
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAdminStats();
+  }, []);
+
+  const fetchAdminStats = async () => {
+    try {
+      // Fetch various statistics
+      const [usersRes, coursesRes, sessionsRes] = await Promise.all([
+        axios.get(`${API}/admin/users`).catch(() => ({ data: [] })),
+        axios.get(`${API}/courses`).catch(() => ({ data: [] })),
+        axios.get(`${API}/mentorship/sessions`).catch(() => ({ data: [] }))
+      ]);
+
+      setStats({
+        totalUsers: usersRes.data.length || 0,
+        totalCourses: coursesRes.data.length || 0,
+        totalSessions: sessionsRes.data.length || 0,
+        recentActivity: []
+      });
+    } catch (error) {
+      console.error('Failed to fetch admin stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-12">Loading admin panel...</div>;
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+        <p className="text-gray-600">Manage your education platform</p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <Users className="w-8 h-8 text-blue-600 mr-3" />
+              <div>
+                <h3 className="text-2xl font-bold">{stats.totalUsers}</h3>
+                <p className="text-gray-600">Total Users</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <BookOpen className="w-8 h-8 text-emerald-600 mr-3" />
+              <div>
+                <h3 className="text-2xl font-bold">{stats.totalCourses}</h3>
+                <p className="text-gray-600">Total Courses</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <CalendarIcon className="w-8 h-8 text-purple-600 mr-3" />
+              <div>
+                <h3 className="text-2xl font-bold">{stats.totalSessions}</h3>
+                <p className="text-gray-600">Total Sessions</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <TrendingUp className="w-8 h-8 text-orange-600 mr-3" />
+              <div>
+                <h3 className="text-2xl font-bold">98%</h3>
+                <p className="text-gray-600">User Satisfaction</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Management Sections */}
+      <div className="grid lg:grid-cols-2 gap-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <UserPlus className="w-5 h-5 mr-2" />
+              User Management
+            </CardTitle>
+            <CardDescription>Manage students, mentors, and admins</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Button className="w-full justify-start" variant="outline">
+                <Users className="w-4 h-4 mr-2" />
+                View All Users
+              </Button>
+              <Button className="w-full justify-start" variant="outline">
+                <Shield className="w-4 h-4 mr-2" />
+                Manage Permissions
+              </Button>
+              <Button className="w-full justify-start" variant="outline">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                User Analytics
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <BookOpen className="w-5 h-5 mr-2" />
+              Content Management
+            </CardTitle>
+            <CardDescription>Manage courses and educational content</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Button className="w-full justify-start" variant="outline">
+                <PlusCircle className="w-4 h-4 mr-2" />
+                Create New Course
+              </Button>
+              <Button className="w-full justify-start" variant="outline">
+                <Settings className="w-4 h-4 mr-2" />
+                Course Settings
+              </Button>
+              <Button className="w-full justify-start" variant="outline">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Content Analytics
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activity */}
+      <Card className="mt-8">
+        <CardHeader>
+          <CardTitle>Platform Activity</CardTitle>
+          <CardDescription>Recent user interactions and system events</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">New user registration</p>
+                <p className="text-xs text-gray-500">Alice Johnson joined as a student</p>
+              </div>
+              <span className="text-xs text-gray-500">2 hours ago</span>
+            </div>
+            <div className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Course published</p>
+                <p className="text-xs text-gray-500">React Development Bootcamp is now live</p>
+              </div>
+              <span className="text-xs text-gray-500">4 hours ago</span>
+            </div>
+            <div className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
+              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Mentorship session completed</p>
+                <p className="text-xs text-gray-500">David Rodriguez completed session with Bob Chen</p>
+              </div>
+              <span className="text-xs text-gray-500">6 hours ago</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
 const Dashboard = () => {
   const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
