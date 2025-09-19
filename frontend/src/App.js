@@ -1186,12 +1186,21 @@ function App() {
             <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <LandingPage />} />
             <Route path="/auth" element={isAuthenticated ? <Navigate to="/dashboard" /> : <AuthPage />} />
             <Route path="/courses" element={<CoursesPage />} />
+            <Route path="/courses/:courseId" element={<CourseDetailPage />} />
             <Route path="/mentors" element={<MentorsPage />} />
             <Route 
               path="/dashboard" 
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminPanel />
                 </ProtectedRoute>
               } 
             />
