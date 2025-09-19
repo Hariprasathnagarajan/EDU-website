@@ -464,12 +464,12 @@ const CoursesPage = () => {
                 className="pl-10"
               />
             </div>
-            <Select value={filters.category} onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}>
+            <Select value={filters.category || ""} onValueChange={(value) => setFilters(prev => ({ ...prev, category: value === "all" ? "" : value }))}>
               <SelectTrigger>
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 <SelectItem value="programming">Programming</SelectItem>
                 <SelectItem value="design">Design</SelectItem>
                 <SelectItem value="business">Business</SelectItem>
