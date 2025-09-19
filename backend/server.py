@@ -327,10 +327,13 @@ async def send_message(
     await db.chat_messages.insert_one(message.dict())
     
     # Send real-time message
+    message_data_for_ws = message.dict()
+    message_data_for_ws['timestamp'] = message_data_for_ws['timestamp'].isoformat()
+    
     await manager.send_personal_message(
         json.dumps({
             "type": "new_message",
-            "data": message.dict(),
+            "data": message_data_for_ws,
             "sender_name": current_user.full_name
         }),
         message_data.receiver_id
